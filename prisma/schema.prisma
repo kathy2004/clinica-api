@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profissional {
+  id                String   @id @default(uuid())
+  nome              String
+  especialidade     String?
+  registroConselho  String?  @map("registro_conselho")
+  criadoEm          DateTime @default(now()) @map("criado_em")
+  fichas            Ficha[]
+
+  @@map("profissionais")
+}
+
+model Paciente {
+  id             String   @id @default(uuid())
+  nome           String
+  cpf            String?  @unique
+  sexo           String?
+  dataNascimento DateTime? @map("data_nascimento")
+  naturalidade   String?
+  endereco       String?
+  numero         String?
+  cidade         String?
+  telefone       String?
+  criadoEm       DateTime @default(now()) @map("criado_em")
+  fichas         Ficha[]
+
+  @@map("pacientes")
+}
+
+model Ficha {
+  id             String   @id @default(uuid())
+  pacienteId     String   @map("paciente_id")
+  profissionalId String   @map("profissional_id")
+  criadaEm       DateTime @default(now()) @map("criada_em")
+
+  paciente       Paciente     @relation(fields: [pacienteId], references: [id])
+  profissional   Profissional @relation(fields: [profissionalId], references: [id])
+  atendimentos   Atendimento[]
+  agendamentos   Agendamento[]
+
+  @@unique([pacienteId, profissionalId])
+  @@map("fichas")
+}
+
+model Atendimento {
+  id          String   @id @default(uuid())
+  fichaId     String   @map("ficha_id")
+  data        DateTime
+  assinatura  String?
+  valor       Decimal? @db.Decimal(10, 2)
+
+  ficha       Ficha    @relation(fields: [fichaId], references: [id])
+
+  @@map("atendimentos")
+}
+
+model Secretaria {
+  id        String   @id @default(uuid())
+  usuario   String   @unique
+  senhaHash String   @map("senha_hash")
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  @@map("secretarias")
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  CONFIRMADO
+  CANCELADO
+  REALIZADO
+}
+
+model Agendamento {
+  id           String            @id @default(uuid())
+  fichaId      String            @map("ficha_id")
+  dataHora     DateTime          @map("data_hora")
+  status       StatusAgendamento @default(AGENDADO)
+  observacoes  String?
+  criadoEm     DateTime          @default(now()) @map("criado_em")
+
+  ficha        Ficha             @relation(fields: [fichaId], references: [id])
+
+  @@map("agendamentos")
+}
