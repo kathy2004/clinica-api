@@ -33,15 +33,21 @@ export class DashboardService {
       porStatus[a.status] = (porStatus[a.status] || 0) + 1;
     });
 
+    const PERCENTUAL_CLINICA = 0.2; // 20% fica com a clínica, 80% com o profissional
+
     const atendimentosHoje = await this.prisma.atendimento.findMany({
       where: { data: { gte: inicioDia, lte: fimDia } },
     });
     const faturamentoHoje = atendimentosHoje.reduce((soma, a) => soma + Number(a.valor || 0), 0);
+    const faturamentoClinicaHoje = faturamentoHoje * PERCENTUAL_CLINICA;
+    const faturamentoProfissionalHoje = faturamentoHoje - faturamentoClinicaHoje;
 
     const atendimentosMes = await this.prisma.atendimento.findMany({
       where: { data: { gte: inicioMes, lte: fimMes } },
     });
     const faturamentoMes = atendimentosMes.reduce((soma, a) => soma + Number(a.valor || 0), 0);
+    const faturamentoClinicaMes = faturamentoMes * PERCENTUAL_CLINICA;
+    const faturamentoProfissionalMes = faturamentoMes - faturamentoClinicaMes;
 
     const totalPacientes = await this.prisma.paciente.count();
     const totalProfissionais = await this.prisma.profissional.count();
@@ -51,7 +57,11 @@ export class DashboardService {
       totalAgendamentosHoje: agendamentosHoje.length,
       porStatus,
       faturamentoHoje,
+      faturamentoClinicaHoje,
+      faturamentoProfissionalHoje,
       faturamentoMes,
+      faturamentoClinicaMes,
+      faturamentoProfissionalMes,
       totalPacientes,
       totalProfissionais,
     };

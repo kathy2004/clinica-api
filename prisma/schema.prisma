@@ -29,6 +29,8 @@ model Paciente {
   numero         String?
   cidade         String?
   telefone       String?
+  responsavelNome String? @map("responsavel_nome")
+  responsavelCpf  String? @map("responsavel_cpf")
   criadoEm       DateTime @default(now()) @map("criado_em")
   fichas         Ficha[]
 
